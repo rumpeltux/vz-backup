@@ -150,6 +150,7 @@ def get_photo_album_ids(soup):
 
 class LoginException(Exception): pass
 class DataException(Exception): pass
+class CaptchaException(Exception): pass
 
 class StudiVZ:
     host = "http://www.studivz.net"
@@ -203,6 +204,9 @@ class StudiVZ:
             res = self.zip.read(args)
         except KeyError:
             res = self.br.open(self.host + "/" + args).read()
+            if "Sicherheits-Abfrage" in res:
+                self.last_res = (res, None) #store the page for debuging
+                raise CaptchaException()
             self.zip.writestr(args, res)
 
         if no_soup:
