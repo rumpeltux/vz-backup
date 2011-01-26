@@ -337,12 +337,13 @@ class StudiVZ:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 3:
-        print "usage: %s email password" % sys.argv[0]
+        print """usage: %s email password [what]
+    what := profiles,tags,albums,pinboards (any combination seperated by ',')""" % sys.argv[0]
         sys.exit(0)
 
     email    = sys.argv[1]
     password = sys.argv[2]
-    downloads = ['profiles'] #, 'tags', 'albums', 'pinboards'
+    downloads = ['profiles'] if len(sys.argv) < 3 else sys.argv[3].split(",")
     config   = None
     if os.path.exists("%s.json" % email):
         config = "%s.json" % email
