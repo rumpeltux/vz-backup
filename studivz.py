@@ -14,6 +14,7 @@ import os.path
 from datetime import datetime
 import time
 import zipfile
+import recaptcha
 
 cdata = re.compile(r'\<\!\[CDATA\[.+?\]\]\>')
 hex_entity_pat = re.compile('&#x([^;]+);')
@@ -156,6 +157,7 @@ class CaptchaException(Exception): pass
 
 class StudiVZ:
     host = "http://www.studivz.net"
+    recaptcha = None
     def __init__(self, mail, pw, config=None):
         self.mail = mail
         self.pw = pw
@@ -179,6 +181,23 @@ class StudiVZ:
         group = self.groups.setdefault(id, {})
         group.update(kwargs)
 
+    def solve_captcha(self, data, br):
+        if self.recaptcha is None:
+            self.recaptcha = recaptcha.ReCaptcha(browser=Browser(), data=data)
+
+        challenge, captcha = self.recaptcha.solve()
+        br.select_form(nr=1) # quicksearch is 0 i guess
+        br.form.set_all_readonly(False)
+        try:
+            br.form['recaptcha_challenge_field'] = challenge
+        except: #weird control not found error
+            br.form.new_control('text', 'recaptcha_challenge_field', {})
+            br.form['recaptcha_challenge_field'] = challenge
+        #but there's two response fields. remove one
+        br.form.find_control('recaptcha_response_field', type='text')._value = captcha
+        br.form.controls.remove(br.form.find_control('recaptcha_response_field', type='hidden'))
+        return br.submit()
+
     def login(self):
         """
         fill out the login form and submit
@@ -187,10 +206,14 @@ class StudiVZ:
         br = Browser()
         br.open(self.host)
         br.select_form(nr=0)
+        self.br = br
         br['email'] = self.mail
         br['password'] = self.pw
         br['ipRestriction'] = []
         res = br.submit().read()
+        while recaptcha.has_captcha(res):
+            res = self.solve_captcha(res, br).read()
+        self.last_res = (res, None)
         if not "Meine Startseite" in res:
             raise LoginException()
         soup = BeautifulSoup(clean_webpage(res))
@@ -206,9 +229,11 @@ class StudiVZ:
             res = self.zip.read(args)
         except KeyError:
             res = self.br.open(self.host + "/" + args).read()
-            if "Sicherheits-Abfrage" in res:
+            if recaptcha.has_captcha(res):
                 self.last_res = (res, None) #store the page for debuging
-                raise CaptchaException()
+                res = self.solve_captcha(res, br).read()
+                return self.load_site(args, no_soup) #retry
+#                raise CaptchaException()
             self.zip.writestr(args, res)
 
         if no_soup:

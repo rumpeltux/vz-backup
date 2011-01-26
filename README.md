@@ -9,7 +9,7 @@ Limitations
  * Captions von Bildern sind verkürzt, da nicht jede einzelne Bilderseite geladen wird
  * Die eigene Mailbox wird nicht geladen, dafür gibt’s [freepops](http://www.freepops.org) mit dem [studiVZ-Plugin](http://www.andremartin.de/StudiVzPlugin/)
  * Bilder müssen im Anschluss „manuell“ (z.B. mit wget) geladen werden 
- * Captchas werden nicht gelöst, sind in tests aber auch nicht aufgetreten
+ * Captchas werden erkannt, müssen aber ggf. manuell gelöst werden. Sie treten aber nicht häufig auf.
 
 TODO
 ====
