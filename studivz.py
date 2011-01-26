@@ -361,6 +361,7 @@ if __name__ == "__main__":
             num_friends = len(s.get_friends_list())
             print "downloading %d friend profiles" % num_friends
             for friend in s.friends:
+                print s.friends[friend].get('name', friend)
                 s.get_profile(friend)
         if 'tags' in downloads:
             print "downloading tagged images of your friends"
