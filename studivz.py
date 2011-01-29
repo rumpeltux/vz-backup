@@ -324,8 +324,9 @@ class StudiVZ:
             for i in p.get('links', []):
                 out_file.write(i['url']+"\n")
 
-    def dump_info(self, out_file):
+    def dump_info(self, out_file, **kwargs):
         data = {'profiles': self.profiles, 'groups': self.groups, 'friends': self.friends, 'id': self.id}
+        data.update(kwargs)
         json.dump(data, out_file, indent=4)
 
     def load_info(self, in_file):
@@ -333,6 +334,7 @@ class StudiVZ:
         self.profiles = data['profiles']
         self.groups = data['groups']
         self.friends = data['friends']
+        self.id = data['id']
 
 if __name__ == "__main__":
     import sys
