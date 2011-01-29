@@ -242,11 +242,13 @@ class StudiVZ:
         self.last_res = (res, soup)
         return res, soup
 
-    def read_paginated_data(self, args, extract_data):
+    def read_paginated_data(self, args, extract_data, max_pages=0):
         """
         read paginated data by iterating over all pages
         calling 'extract_data(soup)' on each to extract information
         and returning the combined list of these
+
+        if max_pages is specified a maximum of max_pages is read
         """
         data, soup = self.load_site(args)
         pages = get_number_of_pages(soup)
@@ -261,6 +263,8 @@ class StudiVZ:
                 a += x
 
         for page in xrange(2, pages+1):
+            if max_pages and page > max_pages: return ret
+
             data, soup = self.load_site(args + "/p/%d" % page)
             res = extract_data(soup)
             update(ret, res)
@@ -298,13 +302,16 @@ class StudiVZ:
     def read_pinboard_page(self, friend_id, page=1):
         return self.load_site("Pinboard/%s/p/%d" % (friend_id, page))
 
-    def get_pinboard(self, friend_id):
+    def get_pinboard(self, friend_id, limit=0):
         """
         reads the complete pinboard and parses the messages storing them in the friend_list
 
         get_friend_list() has to be called beforehand
+
+        limit limits the number of pages to be loaded from each person
+        this is to avoid large pinboards filling up your quota
         """
-        posts = self.read_paginated_data("Pinboard/" + friend_id, lambda soup: get_pinboard_posts(soup, self))
+        posts = self.read_paginated_data("Pinboard/" + friend_id, lambda soup: get_pinboard_posts(soup, self), max_pages=20)
         self.profiles.setdefault(friend_id, {})['pinboard'] = posts
 
     def get_own_photo_albums(self):
@@ -401,9 +408,13 @@ if __name__ == "__main__":
             for friend in s.friends:
                 s.get_photo_albums(friend)
         if 'pinboards' in downloads:
-            print "downloading pinboard messages of your friends"
+            print "downloading pinboard messages of your friends [max 15 pages each]"
             for friend in s.friends:
-                s.get_pinboard(friend)
+                s.get_pinboard(friend, limit=15)
+            print "now additionaly downloading remaining pinboard messages"
+            for friend in s.friends:
+                s.get_pinboard(friend)        
+            
     except BaseException: #also catch KeyboardInterrupts
         print "An error occurred. Saving state."
         s.zip.close()

@@ -10,6 +10,11 @@ Limitations
  * Die eigene Mailbox wird nicht geladen, dafür gibt’s [freepops](http://www.freepops.org) mit dem [studiVZ-Plugin](http://www.andremartin.de/StudiVzPlugin/)
  * Bilder müssen im Anschluss „manuell“ (z.B. mit wget) geladen werden 
  * Captchas werden erkannt, müssen aber ggf. manuell gelöst werden. Sie treten aber nicht häufig auf.
+ * Captchas werden nicht gelöst
+ * Ein Request-Limit verhindert das komplette Downloaden bei zu vielen aufzurufenden Seiten
+   Es tritt dann ein HTTP-Fehler mit dem Code 402 auf, studiVZ hat dann den Account für 24h gesperrt
+   Als Workaround hilft nur: die 24h aussitzen und dann das Programm erneut starten.
+   Da die Daten gecached werden, muss keine Seite mehrfach runtergeladen werden.
 
 TODO
 ====
