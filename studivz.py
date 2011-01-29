@@ -343,7 +343,7 @@ if __name__ == "__main__":
 
     email    = sys.argv[1]
     password = sys.argv[2]
-    downloads = ['profiles'] if len(sys.argv) < 3 else sys.argv[3].split(",")
+    downloads = ['profiles'] if len(sys.argv) < 4 else sys.argv[3].split(",")
     config   = None
     if os.path.exists("%s.json" % email):
         config = "%s.json" % email
