@@ -16,7 +16,9 @@ import time
 import zipfile
 
 cdata = re.compile(r'\<\!\[CDATA\[.+?\]\]\>')
-clean_webpage = lambda data: cdata.sub('', data) #remove freaky stuff that breaks the parser
+hex_entity_pat = re.compile('&#x([^;]+);')
+hex_entity_fix = lambda x: hex_entity_pat.sub(lambda m: '&#%d;' % int(m.group(1), 16), x) # convert hex to dec entities
+clean_webpage = lambda data: hex_entity_fix(cdata.sub('', data)) #remove freaky stuff that breaks the parser
 
 def get_content(node):
     "hacky hack to get the innerContent of a node as unicode"
@@ -211,7 +213,7 @@ class StudiVZ:
 
         if no_soup:
             return res
-        soup = BeautifulSoup(clean_webpage(res))
+        soup = BeautifulSoup(clean_webpage(res), convertEntities=BeautifulSoup.ALL_ENTITIES)
         self.last_res = (res, soup)
         return res, soup
 
