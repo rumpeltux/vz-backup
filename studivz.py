@@ -31,8 +31,8 @@ def get_number_of_pages(soup):
     reads a page's pager information to acquire the number of available sites
     """
     pager = soup.find('div', {'class': 'obj-navigation text-right'})
-    if not pager:
-        pager = soup.find('div', {'class': 'obj-pager'})
+    if not pager: pager = soup.find('div', {'class': 'obj-pager'})
+    if not pager: pager = soup.find('div', {'class': 'obj-pager float-right'})
     if not pager: return 0
     try:
         return int(pager.findChildren()[-1]['title'])
@@ -69,6 +69,19 @@ def profile_parser(soup, storage):
             storage.add_group_information(id, name=name)
             ret.setdefault('groups', []).append(id)
     
+    return ret
+
+def get_friend_list(soup, storage):
+    ret = []
+    for friend in soup.find('table', {'class': 'obj-usertable Snipplet-User-ListSnipplet'}).findAll('tr'):
+        if friend.get('id', None) == "ad-list-row": continue
+        profile_pic = friend.find('img', {'class': 'frame'})
+        imagePath = profile_pic['src']
+        id = os.path.basename(profile_pic.parent['href'])
+        name = get_content(friend.find('dd', {'class': 'name'}).find('a'))
+        uni  = get_content(friend.find('dd', {'class': 'network'}).find('a'))
+        storage.add_profile_information(id, name=name, imagePath=imagePath, uni=uni)
+        ret.append(id)
     return ret
 
 def get_pinboard_posts(soup, storage):
@@ -292,6 +305,12 @@ class StudiVZ:
             self.update_friends_list()
         return self.friends
 
+    def get_friend_friend_list(self, friend_id):
+        """
+        reads the friend-list of a friend
+        """
+        self.profiles.setdefault(friend_id, {})['friends'] = self.read_paginated_data("Friends/Friends/%s" % friend_id, lambda soup: get_friend_list(soup, self))
+
     def get_profile(self, friend_id):
         """
         loads a profile and stores it
@@ -374,7 +393,7 @@ if __name__ == "__main__":
     import sys
     if len(sys.argv) < 3:
         print """usage: %s email password [what]
-    what := profiles,tags,albums,pinboards (any combination seperated by ',')""" % sys.argv[0]
+    what := profiles,tags,albums,friends,pinboards (any combination seperated by ',')""" % sys.argv[0]
         sys.exit(0)
 
     email    = sys.argv[1]
@@ -407,6 +426,10 @@ if __name__ == "__main__":
             print "downloading photo albums of your friends"
             for friend in s.friends:
                 s.get_photo_albums(friend)
+        if 'friends' in downloads:
+            print "downloading friend lists of your friends"
+            for friend in s.friends:
+                s.get_friend_friend_list(friend)
         if 'pinboards' in downloads:
             print "downloading pinboard messages of your friends [max 15 pages each]"
             for friend in s.friends:
