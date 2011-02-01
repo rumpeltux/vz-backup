@@ -231,7 +231,7 @@ class StudiVZ:
             res = self.br.open(self.host + "/" + args).read()
             if recaptcha.has_captcha(res):
                 self.last_res = (res, None) #store the page for debuging
-                res = self.solve_captcha(res, br).read()
+                res = self.solve_captcha(res, self.br).read()
                 return self.load_site(args, no_soup) #retry
 #                raise CaptchaException()
             self.zip.writestr(args, res)
@@ -311,7 +311,7 @@ class StudiVZ:
         limit limits the number of pages to be loaded from each person
         this is to avoid large pinboards filling up your quota
         """
-        posts = self.read_paginated_data("Pinboard/" + friend_id, lambda soup: get_pinboard_posts(soup, self), max_pages=20)
+        posts = self.read_paginated_data("Pinboard/" + friend_id, lambda soup: get_pinboard_posts(soup, self), max_pages=limit)
         self.profiles.setdefault(friend_id, {})['pinboard'] = posts
 
     def get_own_photo_albums(self):
@@ -410,10 +410,10 @@ if __name__ == "__main__":
         if 'pinboards' in downloads:
             print "downloading pinboard messages of your friends [max 15 pages each]"
             for friend in s.friends:
-                s.get_pinboard(friend, limit=15)
+                s.get_pinboard(friend, limit=5)
             print "now additionaly downloading remaining pinboard messages"
             for friend in s.friends:
-                s.get_pinboard(friend)        
+                s.get_pinboard(friend)
             
     except BaseException: #also catch KeyboardInterrupts
         print "An error occurred. Saving state."
