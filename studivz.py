@@ -338,10 +338,10 @@ class StudiVZ:
         downloads each of this users photo albums
         needs special handling, because the page displays all your friends photo albums
         """
-        album_ids = self.read_paginated_data("Photos/Album/" + self.id, get_photo_album_ids)
+        album_ids = self.read_paginated_data("Photos/Album/%s/" % self.id, get_photo_album_ids)
         
         for album_id in album_ids:
-            res = self.get_photo_album(friend_id, album_id)
+            res = self.get_photo_album(self.id, album_id)
 
     def get_photo_albums(self, friend_id):
         """
