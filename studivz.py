@@ -393,12 +393,12 @@ if __name__ == "__main__":
     import sys
     if len(sys.argv) < 3:
         print """usage: %s email password [what]
-    what := profiles,tags,albums,friends,pinboards (any combination seperated by ',')""" % sys.argv[0]
+    what := self,profiles,tags,albums,friends,pinboards (any combination seperated by ',')""" % sys.argv[0]
         sys.exit(0)
 
     email    = sys.argv[1]
     password = sys.argv[2]
-    downloads = ['profiles'] if len(sys.argv) < 4 else sys.argv[3].split(",")
+    downloads = ['self'] if len(sys.argv) < 4 else sys.argv[3].split(",")
     config   = None
     if os.path.exists("%s.json" % email):
         config = "%s.json" % email
@@ -409,9 +409,10 @@ if __name__ == "__main__":
         print "downloading your own information..."
         s.get_friends_list()
         s.get_profile(s.id)
-        s.get_photo_tags(s.id)
-        s.get_own_photo_albums()
-        s.get_pinboard(s.id)
+	if 'self' in downlodas:
+            s.get_photo_tags(s.id)
+            s.get_own_photo_albums()
+            s.get_pinboard(s.id)
         if 'profiles' in downloads:
             num_friends = len(s.get_friends_list())
             print "downloading %d friend profiles" % num_friends
