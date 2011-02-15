@@ -409,7 +409,7 @@ if __name__ == "__main__":
         print "downloading your own information..."
         s.get_friends_list()
         s.get_profile(s.id)
-	if 'self' in downlodas:
+	if 'self' in downloads:
             s.get_photo_tags(s.id)
             s.get_own_photo_albums()
             s.get_pinboard(s.id)
