@@ -16,7 +16,7 @@ import time
 import zipfile
 import recaptcha
 
-cdata = re.compile(r'\<\!\[CDATA\[.+?\]\]\>')
+cdata = re.compile(r'\<\!\[CDATA\[.+?\]\]\>', re.DOTALL)
 hex_entity_pat = re.compile('&#x([^;]+);')
 hex_entity_fix = lambda x: hex_entity_pat.sub(lambda m: '&#%d;' % int(m.group(1), 16), x) # convert hex to dec entities
 clean_webpage = lambda data: hex_entity_fix(cdata.sub('', data)) #remove freaky stuff that breaks the parser
@@ -228,7 +228,7 @@ class StudiVZ:
             res = self.solve_captcha(res, br).read()
         self.last_res = (res, None)
         if not "Meine Startseite" in res:
-            raise LoginException()
+            raise LoginException(res)
         soup = BeautifulSoup(clean_webpage(res))
         self.id = os.path.basename(soup.find('a', {'class': 'profile-link float-left'})['href'])
         self.br = br
@@ -295,7 +295,11 @@ class StudiVZ:
         """
         data, soup = self.load_site("Messages/WriteMessage")
         js = soup.find('input', {'id': 'friendList'})
-        self.friends = json.loads(js['value'])
+        val = js['value']
+        val = re.sub(r'([^,\:\{\\])"([^,\:\}])', r'\1\"\2', val)
+        val = re.sub(r'([^,\:\{\\])"([^,\:\}])', r'\1\"\2', val)
+        
+        self.friends = json.loads(val)
 
     def get_friends_list(self):
         """
