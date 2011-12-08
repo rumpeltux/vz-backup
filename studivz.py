@@ -112,7 +112,11 @@ def get_photos(soup, storage, friend_id=None, album_id=None):
 
     desc = soup.find('p', {'id': 'album-description'})
     if desc: info['description'] = get_content(desc).strip()
-    info['title']       = get_content(soup.find('div', {'class': 'photo-list'}).find('h2')).strip()
+    photos = soup.find('div', {'class': 'photo-list'})
+    if photos is None: # error: no access to these pictures
+        return
+
+    info['title']       = get_content(photos.find('h2')).strip()
     info_pager = soup.findAll('div', {'class': 'info-pager'})
     if info_pager:
         ort = info_pager[-1].find('div', {'class': 'no-float'})
@@ -199,13 +203,21 @@ class StudiVZ:
             self.recaptcha = recaptcha.ReCaptcha(browser=Browser(), data=data)
 
         challenge, captcha = self.recaptcha.solve()
-        br.select_form(nr=1) # quicksearch is 0 i guess
+        for i in range(3): # search the right form
+            br.select_form(nr=i)
+            try:
+                br.form.find_control('recaptcha_response_field', type='text')
+            except:
+                continue
+            break
+
         br.form.set_all_readonly(False)
         try:
             br.form['recaptcha_challenge_field'] = challenge
         except: #weird control not found error
             br.form.new_control('text', 'recaptcha_challenge_field', {})
             br.form['recaptcha_challenge_field'] = challenge
+
         #but there's two response fields. remove one
         br.form.find_control('recaptcha_response_field', type='text')._value = captcha
         br.form.controls.remove(br.form.find_control('recaptcha_response_field', type='hidden'))
@@ -374,10 +386,13 @@ class StudiVZ:
         self.profiles.setdefault(friend_id, {})['links'] = photos
 
     def print_all_images(self, out_file):
-        for p in self.profiles.itervalues():
+        for pname, p in self.profiles.iteritems():
             for a in p.get('albums', {}).itervalues():
                 for i in a.get('photos', []):
                     out_file.write(i['url']+"\n")
+                if p.get('links', []) is None:
+                    print "upps: no links for %s" % pname
+                    continue
             for i in p.get('links', []):
                 out_file.write(i['url']+"\n")
 
