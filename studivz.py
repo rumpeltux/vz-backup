@@ -390,9 +390,9 @@ class StudiVZ:
             for a in p.get('albums', {}).itervalues():
                 for i in a.get('photos', []):
                     out_file.write(i['url']+"\n")
-                if p.get('links', []) is None:
-                    print "upps: no links for %s" % pname
-                    continue
+            if p.get('links', []) is None:
+                print "upps: no links for %s" % pname
+                continue
             for i in p.get('links', []):
                 out_file.write(i['url']+"\n")
 
